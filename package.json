@@ -1,0 +1,14 @@
+{
+  "name": "nepovednik",
+  "version": "3.2.1",
+  "description": "ne povem",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.2",
+    "lodash": "^4.17.4",
+    "mersenne-twister": "^1.1.0",
+    "express": "^4.15.3"
+  }
+}

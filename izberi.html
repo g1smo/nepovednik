@@ -1,0 +1,144 @@
+<html>
+    <head>
+        <title>nepovednik</title>
+
+        <style type="text/css">
+         @-webkit-keyframes rotate-forever {
+             0% {
+                 -webkit-transform: rotate(0deg);
+                 -moz-transform: rotate(0deg);
+                 -ms-transform: rotate(0deg);
+                 -o-transform: rotate(0deg);
+                 transform: rotate(0deg);
+             }
+             100% {
+                 -webkit-transform: rotate(360deg);
+                 -moz-transform: rotate(360deg);
+                 -ms-transform: rotate(360deg);
+                 -o-transform: rotate(360deg);
+                 transform: rotate(360deg);
+             }
+         }
+         @-moz-keyframes rotate-forever {
+             0% {
+                 -webkit-transform: rotate(0deg);
+                 -moz-transform: rotate(0deg);
+                 -ms-transform: rotate(0deg);
+                 -o-transform: rotate(0deg);
+                 transform: rotate(0deg);
+             }
+             100% {
+                 -webkit-transform: rotate(360deg);
+                 -moz-transform: rotate(360deg);
+                 -ms-transform: rotate(360deg);
+                 -o-transform: rotate(360deg);
+                 transform: rotate(360deg);
+             }
+         }
+         @keyframes rotate-forever {
+             0% {
+                 -webkit-transform: rotate(0deg);
+                 -moz-transform: rotate(0deg);
+                 -ms-transform: rotate(0deg);
+                 -o-transform: rotate(0deg);
+                 transform: rotate(0deg);
+             }
+             100% {
+                 -webkit-transform: rotate(360deg);
+                 -moz-transform: rotate(360deg);
+                 -ms-transform: rotate(360deg);
+                 -o-transform: rotate(360deg);
+                 transform: rotate(360deg);
+             }
+         }
+         .loading-spinner {
+             -webkit-animation-duration: 0.75s;
+             -moz-animation-duration: 0.75s;
+             animation-duration: 0.75s;
+             -webkit-animation-iteration-count: infinite;
+             -moz-animation-iteration-count: infinite;
+             animation-iteration-count: infinite;
+             -webkit-animation-name: rotate-forever;
+             -moz-animation-name: rotate-forever;
+             animation-name: rotate-forever;
+             -webkit-animation-timing-function: linear;
+             -moz-animation-timing-function: linear;
+             animation-timing-function: linear;
+             height: 30px;
+             width: 30px;
+             border: 8px solid black;
+             border-right-color: transparent;
+             border-radius: 50%;
+             display: inline-block;
+         }
+
+         .loading-spinner {
+             position: absolute;
+             top: 50%;
+             right: 0;
+             bottom: 0;
+             left: 50%;
+             margin: -15px 0 -15px;
+         }
+        </style>
+    </head>
+    <body>
+        <div>
+            Katero število med 1 in 1000 imaš v mislih?
+            <input id="stevilo" type="text" />
+            <button id="gumb">klik</button>
+        </div>
+
+        <div style="position: relative;">
+            <video style="width: 100%; margin-top: .5rem;" id="televizija" controls>
+                Žal gostujoč kos tehnike ni adekvaten.
+            </video>
+            <div class="loading-spinner" style="display: none" id="loader"></div>
+        </div>
+
+        <script type="text/javascript">
+         var gumb = document.getElementById("gumb");
+         var stel = document.getElementById("stevilo");
+         var tv = document.getElementById("televizija");
+         var loader = document.getElementById("loader");
+         var st = 0;
+
+         function pridobiPosnetek() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "/nepoved/" + st, true);
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var resp = this.responseText;
+
+                    if (resp === "zacetek" || resp === "cakaj") {
+                        setTimeout(pridobiPosnetek, 3000);
+                    } else {
+                        loader.style.display = "none";
+                        //var src = document.createElement("source");
+                        //src.src = resp;
+                        //src.type = "video/webm";
+                        //tv.appendChild(src);
+                        tv.src = resp;
+                        tv.play();
+                    }
+                }
+            };
+            xhttp.send();
+         }
+
+         gumb.onclick = function() {
+             st = parseInt(stel.value);
+
+             if (isNaN(st) || st < 0 || st > 1000) {
+                 stel.style.backgroundColor = "darksalmon";
+             } else {
+                 stel.style.backgroundColor = "transparent";
+                 loader.style.display = "block";
+                 tv.pause();
+                 tv.src = null;
+                 pridobiPosnetek();
+            }
+         };
+        </script>
+    </body>
+</html>
