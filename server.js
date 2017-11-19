@@ -3,11 +3,11 @@ const http = require('http').Server(app);
 const fs = require('fs');
 const exec = require('child_process').exec;
 
-app.get('/', function(req, res) {
+app.get('/nepovednik', function(req, res) {
     res.sendFile(__dirname + '/izberi.html');
 });
 
-app.get('/nepovid/:id', function (req, res) {
+app.get('/nepovednik/nepovid/:id', function (req, res) {
     let st = parseInt(req.params.id);
     if (st < 1 || st > 1000) {
         res.status(404);
@@ -19,7 +19,7 @@ app.get('/nepovid/:id', function (req, res) {
     }
 });
 
-app.get('/nepoved/:ime', function (req, res) {
+app.get('/nepovednik/nepoved/:ime', function (req, res) {
     let st = parseInt(req.params.ime);
     if (st < 1 || st > 1000) {
         res.status(404);

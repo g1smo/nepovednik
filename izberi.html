@@ -1,4 +1,4 @@
-<html>
+<html style="padding-left:15%;padding-right:15%;background:black;color:white;">
     <head>
         <title>nepovednik</title>
 
@@ -83,10 +83,10 @@
         </style>
     </head>
     <body>
-        <div>
+        <div style="font-size: 1.2rem">
             Katero število med 1 in 1000 imaš v mislih?
-            <input id="stevilo" type="text" />
-            <button id="gumb">klik</button>
+            <input id="stevilo" type="text" style="font-size: 1.2rem;background:black;color:white;border-radius:2px;" />
+            <button id="gumb" style="font-size: 1.2rem;color:white;background:black;border:1px solid white;border-radius:2px;">klik</button>
         </div>
 
         <div style="position: relative;">
@@ -105,7 +105,7 @@
 
          function pridobiPosnetek() {
             var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "/nepoved/" + st, true);
+            xhttp.open("GET", "/nepovednik/nepoved/" + st, true);
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     var resp = this.responseText;
@@ -118,7 +118,7 @@
                         //src.src = resp;
                         //src.type = "video/webm";
                         //tv.appendChild(src);
-                        tv.src = resp;
+                        tv.src = '/nepovednik' + resp;
                         tv.play();
                     }
                 }
@@ -126,7 +126,9 @@
             xhttp.send();
          }
 
-         gumb.onclick = function() {
+         gumb.onclick = proziPosnetek;
+
+         function proziPosnetek() {
              st = parseInt(stel.value);
 
              if (isNaN(st) || st < 0 || st > 1000) {
@@ -138,7 +140,17 @@
                  tv.src = null;
                  pridobiPosnetek();
             }
-         };
+         }
+
+         function klik(e) {
+           console.log("kliK!");
+           if (e.keyCode == 13) {
+             proziPosnetek();
+           }
+         }
+
+         stel.onkeypress = klik;
+
         </script>
     </body>
 </html>
