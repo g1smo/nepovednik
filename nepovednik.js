@@ -45,24 +45,39 @@ const generator = new MersenneTwister(stTrejlerja);
 let videi = [];
 let stevec = 0;
 
-fs.readdirSync(videiDir).map(file => {
-    ffmpeg.ffprobe(videiDir + file, (err, metadata) => {
-        videi.push({
-            name: file.substr(0, file.length - 3),
-            path: videiDir + file,
-            length: metadata.streams[0].duration
+function readFolder (path) {
+  fs.readdirSync(path).map(file => {
+   //console.log(file);
+      if (fs.lstatSync(path + file).isFile()) {
+        ffmpeg.ffprobe(path + file, (err, metadata) => {
+            videi.push({
+                name: file.substr(0, file.length - 3),
+                path: path + file,
+                length: metadata.streams[0].duration
+            });
+
+            if (videi.length === stevec) {
+                razsekaj(videi);
+            }
         });
 
-        if (videi.length === stevec) {
-            razsekaj(videi);
-        }
-    });
+        stevec += 1;
+      } else {
+        readFolder(path + file + '/');
+      }
+  });
+}
 
-    stevec += 1;
-});
+readFolder(videiDir);
 
-function imeKosa(st) {
-    return stTrejlerja + '_' + st + '.webm';
+function imeKosa(st, apple = false) {
+    let ext = '.webm';
+
+    if (apple) {
+        ext = '.mp4';
+    }
+
+    return stTrejlerja + '_' + st + ext;
 }
 
 
@@ -83,7 +98,7 @@ function razsekaj(videi) {
             trajanje = parseFloat((trenutniV.length - zacetek).toFixed(2));
         }
 
-        let cmd = "ffmpeg -y -ss " + toHHMMSS(zacetek) + " -i " + trenutniV.path.replace(/([\s()&])/g, "\\$1") + " -t " + toHHMMSS(trajanje) + " -vcodec libvpx -cpu-used -5 -deadline realtime -acodec libvorbis  -max_muxing_queue_size 400 ./kosi/" + imeKosa(stKosov);
+        let cmd = "ffmpeg -y -ss " + toHHMMSS(zacetek) + " -i " + trenutniV.path.replace(/([\s()&'])/g, "\\$1") + " -t " + toHHMMSS(trajanje) + " -vcodec libvpx -cpu-used -5 -deadline realtime -vf scale=1280:720 -ac 1 -acodec libvorbis -ab 192k -ar 44100 -max_muxing_queue_size 400 ./kosi/" + imeKosa(stKosov);
         exec(cmd, function (error, stdout, stderr) {
             if (error !== null) {
                 console.log("Napaka!", error);
@@ -93,7 +108,26 @@ function razsekaj(videi) {
 
             stKoncanih += 1;
 
-            if ((dolzina > dolzinaT) && (stKoncanih === (stKosov - 1))) {
+            if ((dolzina > dolzinaT) && (stKoncanih === (stKosov - 1)*2)) {
+                console.log("konvertirani vsi.");
+                console.log("polna dolzina: " + dolzina);
+                console.log("dajmo jih zlepit. (" + (stKosov - 1) + ")");
+                zlepi();
+            }
+        });
+
+        let cmd_apple = "ffmpeg -y -ss " + toHHMMSS(zacetek) + " -i " + trenutniV.path.replace(/([\s()&'])/g, "\\$1") + " -t " + toHHMMSS(trajanje) + " -vcodec libx264 -b 850k -vf scale=1280:720 -acodec aac -ar 44100 -ab 128k ./kosi/" + imeKosa(stKosov, true);
+        //console.log(cmd_apple);
+        exec(cmd_apple, function (error, stdout, stderr) {
+            if (error !== null) {
+                console.log("Napaka!", error);
+                console.log(stderr);
+                process.exit(1);
+            }
+
+            stKoncanih += 1;
+
+            if ((dolzina > dolzinaT) && (stKoncanih === (stKosov - 1)*2)) {
                 console.log("konvertirani vsi.");
                 console.log("polna dolzina: " + dolzina);
                 console.log("dajmo jih zlepit. (" + (stKosov - 1) + ")");
@@ -107,6 +141,8 @@ function razsekaj(videi) {
 }
 
 function zlepi() {
+    let lepila = 2;
+
     let cmd = 'mkvmerge -o ./nepovedi/' + stTrejlerja + '.webm ./kosi/' + imeKosa(1);
     for (let i = 2; i < stKosov; i++) {
         cmd += ' + ./kosi/' + imeKosa(i);
@@ -124,10 +160,45 @@ function zlepi() {
         console.log("Koncano!");
 
         for(let j = 1; j < stKosov; j++) {
-            //fs.unlinkSync('./kosi/' + imeKosa(j));
+            fs.unlinkSync('./kosi/' + imeKosa(j));
         }
-        fs.unlinkSync(najava);
 
-        process.exit(0);
+        lepila -= 1;
+
+        if (lepila == 0) {
+            fs.unlinkSync(najava);
+
+            process.exit(0);
+        }
+    });
+
+    let cmd_apple = 'MP4Box -force-cat -add ./kosi/' + imeKosa(1, true);
+    for (let i = 2; i < stKosov; i++) {
+        cmd_apple += ' -cat ./kosi/' + imeKosa(i, true);
+    }
+    cmd_apple += ' -new ./nepovedi/' + stTrejlerja + '.mp4';
+
+    exec(cmd_apple, function (error, stdout, stderr) {
+        if (error !== null) {
+            console.log("problem pri lepljenju.");
+            console.log(error);
+            console.log(stdout);
+            console.log(stderr);
+            process.exit(1);
+        }
+
+        console.log("Koncano!");
+
+        for(let j = 1; j < stKosov; j++) {
+            fs.unlinkSync('./kosi/' + imeKosa(j, true));
+        }
+
+        lepila -= 1;
+
+        if (lepila == 0) {
+            fs.unlinkSync(najava);
+
+            process.exit(0);
+        }
     });
 }
