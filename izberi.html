@@ -96,6 +96,8 @@
             <div class="loading-spinner" style="display: none;" id="loader"></div>
         </div>
 
+        <a id="dlGumb" href="" style="font-size: 1.2rem; color: white; float: right;" target="_blank" download>Vzemi</a>
+
         <script type="text/javascript">
          var gumb = document.getElementById("gumb");
          var stel = document.getElementById("stevilo");
@@ -103,26 +105,36 @@
          var loader = document.getElementById("loader");
          var st = 0;
 
+         // je iOS naprava?
+         var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
          var loading = null;
 
          function pridobiPosnetek() {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "/nepovednik/nepoved/" + st, true);
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    var resp = this.responseText;
+             var xhttp = new XMLHttpRequest();
+             xhttp.open("GET", "/nepovednik/nepoved/" + st, true);
+             xhttp.onreadystatechange = function() {
+                 if (this.readyState == 4 && this.status == 200) {
+                     var resp = this.responseText;
 
-                    if (resp === "zacetek" || resp === "cakaj") {
-                        loading = setTimeout(pridobiPosnetek, 3000);
-                    } else {
-                        loader.style.display = "none";
-                        tv.src = '/nepovednik' + resp;
-                        tv.play();
-                        loading = null;
-                    }
-                }
-            };
-            xhttp.send();
+                     if (resp === "zacetek" || resp === "cakaj") {
+                         loading = setTimeout(pridobiPosnetek, 3000);
+                     } else {
+                         loader.style.display = "none";
+
+                         if (iOS) {
+                             resp = "/apple" + resp;
+                         }
+
+                         document.getElementById("dlGumb").href = '/nepovednik' + resp;
+
+                         tv.src = '/nepovednik' + resp;
+                         tv.play();
+                         loading = null;
+                     }
+                 }
+             };
+             xhttp.send();
          }
 
          gumb.onclick = proziPosnetek;
@@ -138,13 +150,13 @@
                  loader.style.display = "block";
                  tv.pause();
                  pridobiPosnetek();
-            }
+             }
          }
 
          function klik(e) {
-           if (e.keyCode == 13) {
-             proziPosnetek();
-           }
+             if (e.keyCode == 13) {
+                 proziPosnetek();
+             }
          }
 
          stel.onkeypress = klik;

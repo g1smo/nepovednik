@@ -7,6 +7,18 @@ app.get('/nepovednik', function(req, res) {
     res.sendFile(__dirname + '/izberi.html');
 });
 
+app.get('/nepovednik/apple/nepovid/:id', function (req, res) {
+    let st = parseInt(req.params.id);
+    if (st < 1 || st > 1000) {
+        res.status(404);
+    }
+
+    let nejm = 'nepovedi/' + st + '.mp4';
+    if (fs.existsSync(nejm)) {
+        res.sendFile(__dirname + '/' + nejm);
+    }
+});
+
 app.get('/nepovednik/nepovid/:id', function (req, res) {
     let st = parseInt(req.params.id);
     if (st < 1 || st > 1000) {
